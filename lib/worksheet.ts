@@ -144,7 +144,8 @@ function cell(children: Paragraph[], width: number, opts: { header?: boolean; la
   return new TableCell({
     width: { size: width, type: WidthType.DXA },
     verticalAlign: header ? VerticalAlign.CENTER : VerticalAlign.TOP,
-    margins: { top: 90, bottom: 90, left: 110, right: 110 },
+    // Speeches have no line between them, so their rows get a little more room above and below.
+    margins: { top: header ? 90 : 140, bottom: header ? 90 : 140, left: 110, right: 110 },
     borders: header ? { top: GRID, bottom: GRID, left: GRID, right: GRID } : { top: NONE, bottom: opts.last ? GRID : NONE, left: GRID, right: GRID },
     shading: header ? { type: ShadingType.CLEAR, color: 'auto', fill: 'E7E6E6' } : undefined,
     children,
