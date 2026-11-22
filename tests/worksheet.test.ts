@@ -29,14 +29,14 @@ describe('worksheet (.docx)', () => {
     // Right-to-left tables, fixed column widths (no overflow).
     expect(xml.match(/<w:bidiVisual/g)!.length).toBeGreaterThanOrEqual(2);
     expect(xml).toContain('w:type="fixed"');
-    // Column order, left to right: text, actions, obstacles, doings, inner dialogue.
-    // In the file the table runs right to left, so the first header cell is the rightmost.
+    // Column order, right to left: obstacles, text, actions, doings, inner dialogue.
+    // The table runs right to left, so the first header cell in the file is the rightmost.
     const header = tables[1];
     const at = (label: string) => header.indexOf(label);
-    expect(at('דיאלוג פנימי')).toBeLessThan(at('Doings'));
-    expect(at('Doings')).toBeLessThan(at('מכשולים'));
-    expect(at('מכשולים')).toBeLessThan(at('פעולות'));
-    expect(at('פעולות')).toBeLessThan(at('טקסט + אובייקטים פנימיים + סימון ביטים'));
+    expect(at('מכשולים')).toBeLessThan(at('טקסט + אובייקטים פנימיים + סימון ביטים'));
+    expect(at('טקסט + אובייקטים פנימיים + סימון ביטים')).toBeLessThan(at('פעולות'));
+    expect(at('פעולות')).toBeLessThan(at('Doings'));
+    expect(at('Doings')).toBeLessThan(at('דיאלוג פנימי'));
     // No forced page break between the box and the table (it left an empty page).
     expect(xml).not.toContain('pageBreakBefore');
     expect(xml).not.toMatch(/<w:br w:type="page"/);

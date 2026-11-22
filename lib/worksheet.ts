@@ -47,12 +47,14 @@ const BOX: BoxRow[] = [
 
 /** Table columns, first one is the rightmost (Hebrew). The inner-dialogue column is the widest. */
 const COLUMNS: [string, number][] = [
+  ['מכשולים', 0.12],
   ['טקסט + אובייקטים פנימיים + סימון ביטים', 0.31],
   ['פעולות', 0.12],
-  ['מכשולים', 0.12],
   ['Doings', 0.12],
   ['דיאלוג פנימי', 0.33],
 ];
+/** Index of the column that holds the speaker and the text. */
+const TEXT_COLUMN = 1;
 const COL_W = COLUMNS.map(([, f]) => Math.round(WIDTH * f));
 COL_W[COL_W.length - 1] += WIDTH - COL_W.reduce((a, b) => a + b, 0);
 
@@ -145,14 +147,10 @@ function cell(children: Paragraph[], width: number, header = false): TableCell {
 }
 
 function workTable(lines: WorksheetInput['lines']): Table {
-  // The table runs right to left, so its first cell is the rightmost. The columns are placed in
-  // reverse: the text at the far left, then actions, obstacles, doings, and the inner dialogue at the far right.
-  const placed = [...COLUMNS].reverse();
-  const widths = [...COL_W].reverse();
   const header = new TableRow({
     tableHeader: true, // repeated at the top of every page
     cantSplit: true,
-    children: placed.map(([title], i) => cell([para([run(title, { bold: true, size: 21 })], { center: true })], widths[i], true)),
+    children: COLUMNS.map(([title], i) => cell([para([run(title, { bold: true, size: 21 })], { center: true })], COL_W[i], true)),
   });
   const rows = lines.map(
     (l) =>
@@ -160,17 +158,18 @@ function workTable(lines: WorksheetInput['lines']): Table {
         // Short speeches stay whole on a page; a long monologue may continue on the next one.
         cantSplit: l.text.length < 700,
         height: { value: 1000, rule: HeightRule.ATLEAST },
-        children: [
-          ...widths.slice(0, -1).map((w) => cell([para([run('')])], w)),
-          cell([para([run(l.speaker, { bold: true })], { after: 40 }), ...l.text.split(/\n+/).map((t) => para([run(t.trim())]))], widths[widths.length - 1]),
-        ],
+        children: COL_W.map((w, i) =>
+          i === TEXT_COLUMN
+            ? cell([para([run(l.speaker, { bold: true })], { after: 40 }), ...l.text.split(/\n+/).map((t) => para([run(t.trim())]))], w)
+            : cell([para([run('')])], w)
+        ),
       })
   );
   return new Table({
     visuallyRightToLeft: true,
     layout: TableLayoutType.FIXED,
     width: { size: WIDTH, type: WidthType.DXA },
-    columnWidths: widths,
+    columnWidths: COL_W,
     rows: [header, ...rows],
   });
 }
