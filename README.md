@@ -27,7 +27,10 @@ the convention it follows, and the convention that yields a small set of names t
 
 The text itself is never rewritten: spacing (including repeated spaces and a space before punctuation),
 punctuation, quotation marks, brackets, English words and numbers come out exactly as written
-(tests check this for every file type). The only things dropped from a PDF are layout filler spaces
+(tests check this for every file type). PDFs written by different programs store right-to-left text differently (some write a punctuation mark
+before its word, some store brackets as drawn). Each file is read both in the order written and from where
+the pieces are drawn, and the way that leaves the punctuation in order is used (`lib/script/bidi.ts`, `pdf.ts`).
+The only things dropped from a PDF are layout filler spaces
 that some programs insert to position punctuation, and page numbers / headers / footers.
 
 Lines after a marker belong to that speaker until the next marker; stage directions in
