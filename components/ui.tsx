@@ -30,8 +30,9 @@ export function TopBar({ onHome }: { onHome?: () => void }) {
   );
 }
 
-export function Page({ children }: { children: ReactNode }) {
-  return <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pb-36 pt-5">{children}</main>;
+/** `tight`: no room reserved for a sticky bottom bar (the landing page). */
+export function Page({ children, tight }: { children: ReactNode; tight?: boolean }) {
+  return <main className={`mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-5 ${tight ? 'pb-8' : 'pb-36'}`}>{children}</main>;
 }
 
 /** Steps of a flow: finished steps are filled, the current one is highlighted. */

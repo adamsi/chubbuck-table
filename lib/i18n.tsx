@@ -5,15 +5,10 @@ export type Lang = 'he' | 'en';
 
 const dict = {
   appName: ['טבלת צ׳באק', 'Chubbuck Table'],
-  heroTitle: ['מהסצנה שלך לטבלת צ׳באק, בכמה שניות', 'From your scene to a Chubbuck worksheet in seconds'],
-  heroSub: ['מעלים את הטקסט, בודקים שהדוברים זוהו נכון, ומורידים קובץ Word מוכן.', 'Upload the text, check the speakers, and download a ready Word file.'],
-  how1: ['מעלים קובץ', 'Upload a file'],
-  how2: ['בודקים דוברים', 'Check speakers'],
-  how3: ['מורידים Word', 'Download Word'],
-  dropTitle: ['גררו לכאן קובץ, או לחצו לבחירה', 'Drop a file here, or tap to choose'],
+  heroTitle: ['העלו סצנה, קבלו טבלה', 'Upload a scene, get a worksheet'],
+  dropTitle: ['או גררו קובץ לכאן', 'or drop a file here'],
   chooseFile: ['בחירת קובץ', 'Choose a file'],
-  formats: ['PDF · Word · ODT · RTF · HTML · TXT', 'PDF · Word · ODT · RTF · HTML · TXT'],
-  privacy: ['הקובץ נשאר במכשיר שלך. שום דבר לא נשלח ולא נשמר.', 'Your file stays on your device. Nothing is sent or stored.'],
+  privacy: ['הקובץ נשאר במכשיר שלך', 'Your file stays on your device'],
   stepUpload: ['העלאה', 'Upload'],
   stepCheck: ['בדיקה', 'Check'],
   stepDownload: ['הורדה', 'Download'],

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { draftFromParsed, toWorksheet, withoutSpeaker, type Draft } from '@/lib/draft';
 import { useI18n, type Key } from '@/lib/i18n';
 import { ReadError } from '@/lib/script/types';
@@ -10,15 +10,6 @@ const MAX_BYTES = 25 * 1024 * 1024;
 type View = 'upload' | 'check' | 'ready';
 
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
-
-function Step({ icon, label }: { icon: ReactNode; label: string }) {
-  return (
-    <li className="flex flex-1 flex-col items-center gap-2 text-center text-dim">
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-card2 text-mine">{icon}</span>
-      <span className="text-sm">{label}</span>
-    </li>
-  );
-}
 
 const READ_ERRORS: Record<ReadError['code'], Key> = {
   unsupported: 'errUnsupported',
@@ -104,41 +95,10 @@ export default function Home() {
   return (
     <>
       <TopBar onHome={reset} />
-      <Page>
+      <Page tight={view === 'upload' && !busy}>
         {view === 'upload' && !busy && (
-          <>
-            <div className="flex flex-col items-center gap-3 pt-2 text-center">
-              <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{t('heroTitle')}</h1>
-              <p className="max-w-md text-lg text-dim">{t('heroSub')}</p>
-            </div>
-
-            <ol className="flex gap-3 py-2">
-              <Step
-                label={t('how1')}
-                icon={
-                  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden {...stroke}>
-                    <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
-                  </svg>
-                }
-              />
-              <Step
-                label={t('how2')}
-                icon={
-                  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden {...stroke}>
-                    <circle cx="9" cy="8" r="3.5" />
-                    <path d="M3 20c0-3.3 2.7-5.5 6-5.5M14 17l2.5 2.5L21 14" />
-                  </svg>
-                }
-              />
-              <Step
-                label={t('how3')}
-                icon={
-                  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden {...stroke}>
-                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 11v6m-3-3 3 3 3-3" />
-                  </svg>
-                }
-              />
-            </ol>
+          <div className="flex min-h-[calc(100dvh-8.25rem)] flex-col justify-center gap-6">
+            <h1 className="text-center text-3xl font-bold leading-tight sm:text-4xl">{t('heroTitle')}</h1>
 
             {error && (
               <p className="card border-red-400/50 p-4 text-red-300" dir="auto" role="alert">
@@ -153,20 +113,17 @@ export default function Home() {
               }}
               onDragLeave={() => setDragging(false)}
               onDrop={onDrop}
-              className={`flex cursor-pointer flex-col items-center gap-4 rounded-3xl border-2 border-dashed p-10 text-center transition-colors ${
+              className={`flex cursor-pointer flex-col items-center gap-5 rounded-3xl border-2 border-dashed px-6 py-12 text-center transition-colors ${
                 dragging ? 'border-mine bg-mine/10' : 'border-line bg-card/60 hover:border-mine/60'
               }`}
             >
-              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-mine/15 text-mine">
-                <svg viewBox="0 0 24 24" width="38" height="38" aria-hidden {...stroke}>
-                  <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4" />
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-mine/15 text-mine">
+                <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden {...stroke}>
+                  <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
                 </svg>
               </span>
-              <span className="text-xl font-semibold">{t('dropTitle')}</span>
               <span className="btn btn-primary text-xl">{t('chooseFile')}</span>
-              <span className="text-sm text-dim" dir="ltr">
-                {t('formats')}
-              </span>
+              <span className="text-dim">{t('dropTitle')}</span>
               <input
                 ref={input}
                 type="file"
@@ -186,7 +143,7 @@ export default function Home() {
               </svg>
               {t('privacy')}
             </p>
-          </>
+          </div>
         )}
 
         {view !== 'upload' && !busy && <Stepper steps={[t('stepUpload'), t('stepCheck'), t('stepDownload')]} current={view === 'check' ? 1 : 2} />}
