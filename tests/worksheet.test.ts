@@ -29,5 +29,8 @@ describe('worksheet (.docx)', () => {
     // Right-to-left tables, fixed column widths (no overflow).
     expect(xml.match(/<w:bidiVisual/g)!.length).toBeGreaterThanOrEqual(2);
     expect(xml).toContain('w:type="fixed"');
+    // No forced page break between the box and the table (it left an empty page).
+    expect(xml).not.toContain('pageBreakBefore');
+    expect(xml).not.toMatch(/<w:br w:type="page"/);
   });
 });

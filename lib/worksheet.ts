@@ -200,8 +200,9 @@ export async function buildWorksheet(input: WorksheetInput): Promise<Blob> {
           ...(input.author ? [para([run(input.author, { size: 22, color: '595959' })], { center: true })] : []),
           para([run('טבלת עבודה בשיטת צ׳באק', { size: 20, color: '7F7F7F' })], { center: true, after: 200 }),
           fieldsBox(),
-          // The general questions fill the first page; the table starts on a new one.
-          new Paragraph({ pageBreakBefore: true, spacing: { before: 0, after: 0, line: 20 }, children: [] }),
+          // A small gap; it also keeps Word from merging the two tables. No page break: the table
+          // starts right below the box, so there is never an empty page.
+          new Paragraph({ spacing: { before: 160, after: 0 }, children: [new TextRun({ text: '', size: 8 })] }),
           workTable(input.lines),
         ],
       },
