@@ -37,6 +37,10 @@ describe('worksheet (.docx)', () => {
     expect(at('טקסט + אובייקטים פנימיים + סימון ביטים')).toBeLessThan(at('פעולות'));
     expect(at('פעולות')).toBeLessThan(at('Doings'));
     expect(at('Doings')).toBeLessThan(at('דיאלוג פנימי'));
+    // No horizontal line between speeches: only the header row has top / bottom lines, and the last row closes the table.
+    const cols = 5;
+    expect(header.match(/<w:top w:val="single"/g)).toHaveLength(cols);
+    expect(header.match(/<w:bottom w:val="single"/g)).toHaveLength(2 * cols);
     // No forced page break between the box and the table (it left an empty page).
     expect(xml).not.toContain('pageBreakBefore');
     expect(xml).not.toMatch(/<w:br w:type="page"/);
