@@ -1,4 +1,4 @@
-import { clean } from './lines';
+import { faithful, plain } from './lines';
 import { ReadError, type RawLine } from './types';
 
 interface Item {
@@ -20,74 +20,40 @@ interface PdfLine {
   vpos: number;
 }
 
-const RTL = /[֐-ࣿ]/;
-const CLOSING = /^[.,!?;:)\]}…"'׳״%»]+$/;
-const OPENING = /^[(\[{"'«]+$/;
 
 const median = (xs: number[]) => {
   const s = [...xs].sort((a, b) => a - b);
   return s.length ? s[Math.floor(s.length / 2)] : 0;
 };
 
-const isLetter = (c: string | undefined) => !!c && /\p{L}/u.test(c);
-
 /**
- * Straight quotes: the 1st, 3rd, ... open a quotation (no space after) and the 2nd, 4th, ... close it
- * (no space before). A quote between two letters, as in צה"ל, belongs to the word and is left alone.
+ * Puts the pieces of one visual line back into a string, without changing the text.
+ *
+ * PDF text pieces come in reading order (the logical order, also for Hebrew) but usually without
+ * spaces: a space is added where there is a gap between two pieces. Pieces that are only a space
+ * are kept, unless they are very wide: those are layout fillers that some programs (Google Docs)
+ * put in to push a punctuation mark to the other end of the line, and they are not part of the text.
  */
-export function fixQuotes(text: string): string {
-  const chars = [...text];
-  let out = '';
-  let open = true;
-  let skipSpace = false;
-  chars.forEach((c, i) => {
-    if (skipSpace && c === ' ') return;
-    skipSpace = false;
-    if (c === '"' && !(isLetter(chars[i - 1]) && isLetter(chars[i + 1]))) {
-      if (open) skipSpace = true;
-      else out = out.trimEnd();
-      open = !open;
-    }
-    out += c;
-  });
-  return out;
-}
-
-/** Removes the spaces PDF layout leaves around punctuation and quotation marks. */
-export function tidy(text: string): string {
-  const t = text.replace(/\s+([.,!?;:)\]}…%»])/g, '$1').replace(/([(\[{«])\s+/g, '$1');
-  return fixQuotes(t).replace(/\s+/g, ' ').trim();
-}
-
-/**
- * Puts the pieces of one visual line back into a string. PDF text pieces come in reading order
- * (which is the logical order, also for Hebrew), but usually without spaces: those are rebuilt
- * from the gaps between the pieces.
- */
-function joinItems(items: Item[]): string {
+export function joinItems(items: Item[]): string {
   const text = items.map((i) => i.str).join('');
-  const rtl = (text.match(/[֐-ࣿ]/g)?.length ?? 0) >= (text.match(/[A-Za-z]/g)?.length ?? 0);
+  const rtl = (text.match(/[\u0590-\u08ff]/g)?.length ?? 0) >= (text.match(/[A-Za-z]/g)?.length ?? 0);
   let out = '';
   let prev: Item | null = null;
   for (const it of items) {
     if (!it.str.trim()) {
-      // A piece that is only whitespace: a space.
-      if (out && !out.endsWith(' ')) out += ' ';
+      // A real space is about a third of the font size wide; anything much wider is a filler.
+      if (it.w <= it.h * 0.8) out += it.str;
       continue;
     }
-    if (prev && out && !out.endsWith(' ') && !it.str.startsWith(' ')) {
-      const closing = CLOSING.test(it.str.trim());
-      const opening = OPENING.test(prev.str.trim());
-      if (!closing && !opening) {
-        const gap = rtl ? prev.x - (it.x + it.w) : it.x - (prev.x + prev.w);
-        const charW = it.w / Math.max(1, it.str.length) || 4;
-        if (gap > 0.2 * charW) out += ' ';
-      }
+    if (prev && !out.endsWith(' ') && !it.str.startsWith(' ')) {
+      const gap = rtl ? prev.x - (it.x + it.w) : it.x - (prev.x + prev.w);
+      const charW = it.w / Math.max(1, it.str.length) || 4;
+      if (gap > 0.2 * charW) out += ' ';
     }
     out += it.str;
     prev = it;
   }
-  return tidy(out);
+  return out;
 }
 
 /** PDF with a text layer. Scanned PDFs (pictures of pages) have none and cannot be read. */
@@ -121,8 +87,8 @@ export async function readPdf(data: ArrayBuffer): Promise<RawLine[]> {
     }
 
     for (const g of groups) {
-      const text = clean(joinItems(g.items));
-      if (!text) continue;
+      const text = faithful(joinItems(g.items));
+      if (!plain(text)) continue;
       const solid = g.items.filter((i) => i.str.trim());
       const chars = new Map<string, number>();
       for (const i of solid) chars.set(i.font, (chars.get(i.font) ?? 0) + i.str.length);
@@ -157,4 +123,3 @@ export async function readPdf(data: ArrayBuffer): Promise<RawLine[]> {
   return kept.map((l) => ({ text: l.text, bold: false, boldPrefix: '', font: l.font, centered: l.centered }));
 }
 
-export const hasHebrew = (s: string) => RTL.test(s);

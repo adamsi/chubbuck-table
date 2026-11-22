@@ -1,3 +1,4 @@
+import { plain } from './lines';
 import type { ParsedScript, RawLine, Speech } from './types';
 
 /*
@@ -69,21 +70,22 @@ function candidates(lines: RawLine[]): Candidate[] {
   const out: Candidate[] = [];
   lines.forEach((l, i) => {
     const text = l.text;
+    const ptext = plain(text);
 
     // header: the whole line is a name
-    const h = splitName(text);
+    const h = splitName(ptext);
     if (h) out.push({ i, kind: 'header', sig: signature(l, h.name), key: nameKey(h.name), name: h.name, direction: h.direction, rest: '' });
 
     // inline: "NAME: text"
     const inline = text.match(/^([^:：]{1,45}?)\s*[:：]\s*(\S.*)$/);
     if (inline) {
-      const n = splitName(inline[1]);
+      const n = splitName(plain(inline[1]));
       if (n) out.push({ i, kind: 'inline', sig: '', key: nameKey(n.name), name: n.name, direction: n.direction, rest: inline[2] });
     }
 
     // boldprefix: "**NAME** text" (the name is the bold start of a line that is not bold as a whole)
     if (l.boldPrefix && text.startsWith(l.boldPrefix) && text.length > l.boldPrefix.length) {
-      const n = splitName(l.boldPrefix);
+      const n = splitName(plain(l.boldPrefix));
       if (n) {
         const rest = text.slice(l.boldPrefix.length).replace(/^\s*[:：\-–—]?\s*/, '');
         if (rest) out.push({ i, kind: 'boldprefix', sig: '', key: nameKey(n.name), name: n.name, direction: n.direction, rest });
@@ -93,7 +95,7 @@ function candidates(lines: RawLine[]): Candidate[] {
     // dash: "NAME - text"
     const dash = text.match(/^(.{1,35}?)\s+[-–—]\s+(\S.*)$/);
     if (dash) {
-      const n = splitName(dash[1]);
+      const n = splitName(plain(dash[1]));
       if (n) out.push({ i, kind: 'dash', sig: '', key: nameKey(n.name), name: n.name, direction: n.direction, rest: dash[2] });
     }
   });
@@ -120,8 +122,8 @@ function score(kind: Kind, sig: string, members: Candidate[], totalLines: number
 
   if (cover < 3 || kept.size < 1 || kept.size > 25) return null;
   if (cover / (cover + noise) < 0.6) return null;
-  // A style shared by most of the document is the body text style, not a marker.
-  if (kind === 'header' && members.length / totalLines > 0.6) return null;
+  // A style shared by nearly the whole document is the body text style, not a marker.
+  if (kind === 'header' && members.length / totalLines > 0.75) return null;
   if (kind === 'header' && sig === '' && kept.size > 12) return null;
 
   const weight = kind === 'header' && sig === '' ? 0.6 : WEIGHT[kind];
@@ -152,16 +154,16 @@ function pickMarkers(lines: RawLine[]): Candidate[] | null {
 const short = (s: string) => s.length <= 30 && s.split(/\s+/).length <= 4 && !/[.?!…,;:]/.test(s);
 
 function titleAndAuthor(pre: RawLine[]): { title: string; author: string } {
-  const title = pre[0]?.text ?? '';
+  const title = plain(pre[0]?.text ?? '');
   let author = '';
   for (const l of pre.slice(1)) {
-    const m = l.text.match(AUTHOR);
+    const m = plain(l.text).match(AUTHOR);
     if (m) {
       author = m[2].trim();
       break;
     }
   }
-  if (!author && pre.length >= 2 && pre.length <= 3 && short(pre[1].text)) author = pre[1].text;
+  if (!author && pre.length >= 2 && pre.length <= 3 && short(plain(pre[1].text))) author = plain(pre[1].text);
   return { title, author };
 }
 

@@ -63,7 +63,9 @@ export function readRtf(source: string): RawLine[] {
       const next = source[i + 1];
       if (next === "'") {
         const hex = source.slice(i + 2, i + 4);
-        if (!skip) pendingBytes.push(parseInt(hex, 16));
+        // The fallback character that follows a \uN escape may itself be written as \'hh: skip it.
+        if (skipChars > 0) skipChars--;
+        else if (!skip) pendingBytes.push(parseInt(hex, 16));
         i += 4;
       } else if (next === '\\' || next === '{' || next === '}') {
         if (!skip) {

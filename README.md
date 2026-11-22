@@ -25,6 +25,11 @@ the convention it follows, and the convention that yields a small set of names t
 | bold name and text in the same line | **דנה** שלום |
 | `NAME - text` | דנה - שלום |
 
+The text itself is never rewritten: spacing (including repeated spaces and a space before punctuation),
+punctuation, quotation marks, brackets, English words and numbers come out exactly as written
+(tests check this for every file type). The only things dropped from a PDF are layout filler spaces
+that some programs insert to position punctuation, and page numbers / headers / footers.
+
 Lines after a marker belong to that speaker until the next marker; stage directions in
 parentheses stay inside the speech; page numbers, headers and footers of PDFs are dropped.
 The check screen lets the user fix anything the code got wrong: rename or add characters,
