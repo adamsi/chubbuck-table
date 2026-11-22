@@ -145,10 +145,14 @@ function cell(children: Paragraph[], width: number, header = false): TableCell {
 }
 
 function workTable(lines: WorksheetInput['lines']): Table {
+  // The table runs right to left, so its first cell is the rightmost. The columns are placed in
+  // reverse: the text at the far left, then actions, obstacles, doings, and the inner dialogue at the far right.
+  const placed = [...COLUMNS].reverse();
+  const widths = [...COL_W].reverse();
   const header = new TableRow({
     tableHeader: true, // repeated at the top of every page
     cantSplit: true,
-    children: COLUMNS.map(([title], i) => cell([para([run(title, { bold: true, size: 21 })], { center: true })], COL_W[i], true)),
+    children: placed.map(([title], i) => cell([para([run(title, { bold: true, size: 21 })], { center: true })], widths[i], true)),
   });
   const rows = lines.map(
     (l) =>
@@ -157,8 +161,8 @@ function workTable(lines: WorksheetInput['lines']): Table {
         cantSplit: l.text.length < 700,
         height: { value: 1000, rule: HeightRule.ATLEAST },
         children: [
-          cell([para([run(l.speaker, { bold: true })], { after: 40 }), ...l.text.split(/\n+/).map((t) => para([run(t.trim())]))], COL_W[0]),
-          ...COL_W.slice(1).map((w) => cell([para([run('')])], w)),
+          ...widths.slice(0, -1).map((w) => cell([para([run('')])], w)),
+          cell([para([run(l.speaker, { bold: true })], { after: 40 }), ...l.text.split(/\n+/).map((t) => para([run(t.trim())]))], widths[widths.length - 1]),
         ],
       })
   );
@@ -166,7 +170,7 @@ function workTable(lines: WorksheetInput['lines']): Table {
     visuallyRightToLeft: true,
     layout: TableLayoutType.FIXED,
     width: { size: WIDTH, type: WidthType.DXA },
-    columnWidths: COL_W,
+    columnWidths: widths,
     rows: [header, ...rows],
   });
 }
